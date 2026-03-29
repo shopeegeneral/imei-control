@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IMEI Control - Scan Blacklist</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/imei-control/css/style.css">
+</head>
+<body>
+  <script>
+    (function() {
+      const role = localStorage.getItem('userRole');
+      if (role) document.body.classList.add('role-' + role);
+    })();
+  </script>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text">
+        <img src="/imei-control/img/spx_logo.png" alt="SPX Logo" class="logo-image">
+        <span class="logo-sub">IMEI Control</span>
+      </div>
+    </div>
+
+    <div class="warehouse-filter">
+      <label class="warehouse-filter-label">
+        <i class="fa-solid fa-warehouse"></i>
+        Chọn kho
+      </label>
+      <select id="warehouse-filter" class="warehouse-select">
+        <option value="">Đang tải...</option>
+      </select>
+    </div>
+
+    <ul class="sidebar-menu">
+      <li class="sidebar-menu-item hide-supervisor">
+        <a href="/imei-control/" class="sidebar-menu-link">
+          <i class="fa-solid fa-barcode sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Scan IMEI</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item supervisor-only">
+        <a href="/imei-control/devices" class="sidebar-menu-link">
+          <i class="fa-solid fa-microchip sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý thiết bị</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item supervisor-only">
+        <a href="/imei-control/warehouses" class="sidebar-menu-link">
+          <i class="fa-solid fa-building sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý kho</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item supervisor-only">
+        <a href="/imei-control/departments" class="sidebar-menu-link">
+          <i class="fa-solid fa-sitemap sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý bộ phận</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item">
+        <a href="/imei-control/history" class="sidebar-menu-link">
+          <i class="fa-solid fa-clock-rotate-left sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Lịch sử</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item admin-security-only">
+        <a href="/imei-control/users" class="sidebar-menu-link">
+          <i class="fa-solid fa-users sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý Users</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item admin-user-only">
+        <a href="/imei-control/scan-blacklist" class="sidebar-menu-link active">
+          <i class="fa-solid fa-id-card-clip sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Scan Blacklist</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item admin-only">
+        <a href="/imei-control/blacklist" class="sidebar-menu-link">
+          <i class="fa-solid fa-user-slash sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý Blacklist</span>
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- Main Wrapper -->
+  <div class="main-wrapper">
+    <!-- Top Bar -->
+    <header class="top-bar">
+      <div class="breadcrumb">
+        <span class="breadcrumb-item">
+          <i class="fa-solid fa-warehouse"></i>
+          IMEI Control
+        </span>
+        <span class="breadcrumb-separator">/</span>
+        <span class="breadcrumb-item breadcrumb-active">Scan Blacklist</span>
+      </div>
+
+      <div class="top-bar-actions">
+        <button class="top-bar-icon has-notification">
+          <i class="fa-solid fa-bell"></i>
+        </button>
+        <button class="top-bar-icon">
+          <i class="fa-solid fa-calendar"></i>
+        </button>
+        <div class="user-menu" id="user-menu">
+          <div class="user-avatar" id="user-avatar">--</div>
+          <span class="user-name" id="user-name">Loading...</span>
+          <i class="fa-solid fa-chevron-down user-dropdown-icon"></i>
+
+          <div class="user-dropdown" id="user-dropdown">
+            <div class="user-dropdown-header">
+              <div class="user-dropdown-name" id="dropdown-full-name">--</div>
+              <div class="user-dropdown-username" id="dropdown-username">@--</div>
+            </div>
+            <ul class="user-dropdown-menu">
+              <li class="user-dropdown-item" id="change-password-btn">
+                <i class="fa-solid fa-key"></i>
+                <span>Đổi mật khẩu</span>
+              </li>
+              <li class="user-dropdown-item logout" id="logout-btn">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Đăng xuất</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="content-wrapper">
+      <div class="scan-layout">
+        <!-- Left Column: Scan input -->
+        <div class="scan-left">
+          <div class="card mb-4">
+            <div class="card-padding">
+              <h2 class="page-title" style="margin-bottom:6px;">
+                <i class="fa-solid fa-id-card-clip" style="color:#e74c3c;margin-right:8px;"></i>
+                Scan Blacklist
+              </h2>
+              <p class="page-subtitle" style="margin-bottom:20px;">
+                Nhập <strong>số cuối CCCD</strong> để kiểm tra xem người này có trong danh sách Blacklist không
+              </p>
+
+              <div class="form-group">
+                <label class="form-label form-label-required">Số cuối CCCD</label>
+                <div class="flex gap-3">
+                  <input
+                    type="text"
+                    id="cccd-suffix-input"
+                    class="form-input font-mono scan-input"
+                    placeholder="Nhập 4-6 số cuối CCCD..."
+                    autofocus
+                    maxlength="12"
+                    inputmode="numeric"
+                    style="flex:1;"
+                  >
+                  <button id="scan-blacklist-btn" class="btn btn-primary btn-lg">
+                    <i class="fa-solid fa-search"></i>
+                    Scan
+                  </button>
+                </div>
+                <small style="color:#aaa;font-size:12px;margin-top:6px;display:block;">
+                  VD: nhập <span class="font-mono" style="background:#f5f7fa;padding:1px 6px;border-radius:4px;">1234</span>
+                  → kiểm tra 4 số cuối CCCD
+                </small>
+              </div>
+
+              <!-- Inline result (clear / error) -->
+              <div id="scan-blacklist-result"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Instructions -->
+        <div class="scan-right">
+          <div class="card">
+            <div class="card-padding">
+              <h3 style="font-size:15px;font-weight:600;margin-bottom:14px;color:#2c3e50;">
+                <i class="fa-solid fa-circle-info" style="color:#3b82f6;margin-right:6px;"></i>
+                Hướng dẫn sử dụng
+              </h3>
+              <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px;">
+                <li style="display:flex;gap:10px;align-items:flex-start;">
+                  <span style="background:#3b82f6;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px;">1</span>
+                  <span style="font-size:14px;color:#555;">Nhập <strong>số cuối CCCD</strong> của người cần kiểm tra (thường 4-6 số)</span>
+                </li>
+                <li style="display:flex;gap:10px;align-items:flex-start;">
+                  <span style="background:#3b82f6;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px;">2</span>
+                  <span style="font-size:14px;color:#555;">Nhấn <strong>Scan</strong> hoặc phím <kbd style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:4px;padding:1px 6px;font-size:12px;">Enter</kbd></span>
+                </li>
+                <li style="display:flex;gap:10px;align-items:flex-start;">
+                  <span style="background:#3b82f6;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px;">3</span>
+                  <span style="font-size:14px;color:#555;">Nếu có nhiều kết quả trùng số cuối, chọn đúng người để xem chi tiết</span>
+                </li>
+              </ul>
+
+              <div style="margin-top:20px;padding:12px 16px;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;">
+                <div style="font-size:13px;color:#dc2626;font-weight:600;margin-bottom:4px;">
+                  <i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i>
+                  Kết quả Blacklist
+                </div>
+                <div style="font-size:12px;color:#991b1b;line-height:1.5;">
+                  Nếu người này có trong danh sách Blacklist, hệ thống sẽ hiển thị thông tin chi tiết kèm lý do và thời hạn.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Blacklist Detail Modal -->
+  <div class="modal-overlay" id="blacklist-detail-modal" style="display:none;">
+    <div class="modal-content" style="max-width:520px;width:100%;">
+      <!-- Red alert header -->
+      <div style="background:#e74c3c;color:#fff;border-radius:10px 10px 0 0;padding:18px 24px;margin:-24px -24px 20px -24px;display:flex;align-items:center;gap:14px;">
+        <i class="fa-solid fa-triangle-exclamation" style="font-size:28px;"></i>
+        <div>
+          <div style="font-size:18px;font-weight:700;" id="detail-name">—</div>
+          <div style="font-size:13px;opacity:.85;margin-top:2px;" id="detail-status"></div>
+        </div>
+      </div>
+
+      <table style="width:100%;border-collapse:collapse;font-size:14px;">
+        <tbody>
+          <tr style="border-bottom:1px solid #f1f5f9;">
+            <td style="padding:10px 0;color:#888;width:45%;">Số CCCD</td>
+            <td style="padding:10px 0;font-weight:600;font-family:'JetBrains Mono',monospace;" id="detail-cccd">—</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f1f5f9;">
+            <td style="padding:10px 0;color:#888;">Địa chỉ</td>
+            <td style="padding:10px 0;" id="detail-address">—</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f1f5f9;">
+            <td style="padding:10px 0;color:#888;">Đơn vị</td>
+            <td style="padding:10px 0;" id="detail-unit">—</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f1f5f9;">
+            <td style="padding:10px 0;color:#888;">Thông tin xe</td>
+            <td style="padding:10px 0;" id="detail-vehicle">—</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f1f5f9;">
+            <td style="padding:10px 0;color:#888;">Lý do Blacklist</td>
+            <td style="padding:10px 0;color:#dc2626;font-weight:500;" id="detail-reason">—</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f1f5f9;">
+            <td style="padding:10px 0;color:#888;">Thời hạn</td>
+            <td style="padding:10px 0;font-weight:600;" id="detail-expires">—</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f1f5f9;">
+            <td style="padding:10px 0;color:#888;">Thêm bởi</td>
+            <td style="padding:10px 0;" id="detail-added-by">—</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 0;color:#888;">Ngày thêm</td>
+            <td style="padding:10px 0;" id="detail-added-at">—</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="modal-footer" style="margin-top:20px;">
+        <button id="detail-modal-close" class="btn btn-primary" style="width:100%;">
+          <i class="fa-solid fa-check"></i>
+          Đã kiểm tra xong
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Picker Modal -->
+  <div class="modal-overlay" id="picker-modal" style="display:none;">
+    <div class="modal-content" style="max-width:480px;width:100%;">
+      <h3 class="modal-title" style="margin-bottom:6px;">
+        <i class="fa-solid fa-users" style="margin-right:8px;color:#e74c3c;"></i>
+        Nhiều kết quả trùng
+      </h3>
+      <p class="page-subtitle" style="margin-bottom:16px;" id="picker-title"></p>
+      <div id="picker-list" style="max-height:360px;overflow-y:auto;"></div>
+      <div class="modal-footer" style="margin-top:16px;">
+        <button id="picker-modal-close" class="btn btn-secondary">Huỷ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <script src="/imei-control/js/common.js"></script>
+  <script src="/imei-control/js/scan-blacklist.js"></script>
+</body>
+</html>

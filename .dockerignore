@@ -1,0 +1,17 @@
+node_modules
+.env
+.git
+*.log
+npm-debug.log*
+
+# Không copy data thô vào image, dùng volume thay thế
+uploads/*
+uploads_tickets/*
+uploads_excel/*
+storage/*
+output/*
+
+# File backup lớn - import thủ công nếu cần
+ibticket_FULL_BACKUP.sql
+data.json
+data copy.json

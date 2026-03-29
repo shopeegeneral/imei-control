@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IMEI Control - Quản lý Users</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/imei-control/css/style.css">
+</head>
+<body>
+  <script>
+    // Set role class immediately from localStorage to prevent menu flash
+    (function() {
+      const role = localStorage.getItem('userRole');
+      if (role) {
+        document.body.classList.add('role-' + role);
+      }
+    })();
+  </script>
+  
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text">
+        <img src="/imei-control/img/spx_logo.png" alt="SPX Logo" class="logo-image">
+        <span class="logo-sub">IMEI Control</span>
+      </div>
+    </div>
+    
+    <div class="warehouse-filter">
+      <label class="warehouse-filter-label">
+        <i class="fa-solid fa-warehouse"></i>
+        Chọn kho
+      </label>
+      <select id="warehouse-filter" class="warehouse-select">
+        <option value="">Đang tải...</option>
+      </select>
+    </div>
+
+    <ul class="sidebar-menu">
+      <li class="sidebar-menu-item hide-supervisor">
+        <a href="/imei-control/" class="sidebar-menu-link">
+          <i class="fa-solid fa-barcode sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Scan IMEI</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item supervisor-only">
+        <a href="/imei-control/devices" class="sidebar-menu-link">
+          <i class="fa-solid fa-microchip sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý thiết bị</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item supervisor-only">
+        <a href="/imei-control/warehouses" class="sidebar-menu-link">
+          <i class="fa-solid fa-building sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý kho</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item supervisor-only">
+        <a href="/imei-control/departments" class="sidebar-menu-link">
+          <i class="fa-solid fa-sitemap sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý bộ phận</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item">
+        <a href="/imei-control/history" class="sidebar-menu-link">
+          <i class="fa-solid fa-clock-rotate-left sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Lịch sử</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item admin-security-only">
+        <a href="/imei-control/users" class="sidebar-menu-link active">
+          <i class="fa-solid fa-users sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý Users</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item admin-user-only">
+        <a href="/imei-control/scan-blacklist" class="sidebar-menu-link">
+          <i class="fa-solid fa-id-card-clip sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Scan Blacklist</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item admin-only">
+        <a href="/imei-control/blacklist" class="sidebar-menu-link">
+          <i class="fa-solid fa-user-slash sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý Blacklist</span>
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- Main Wrapper -->
+  <div class="main-wrapper">
+    <!-- Top Bar -->
+    <header class="top-bar">
+      <div class="breadcrumb">
+        <span class="breadcrumb-item">
+          <i class="fa-solid fa-warehouse"></i>
+          IMEI Control
+        </span>
+        <span class="breadcrumb-separator">/</span>
+        <span class="breadcrumb-item breadcrumb-active">Quản lý Users</span>
+      </div>
+      
+      <div class="top-bar-actions">
+        <button class="top-bar-icon has-notification">
+          <i class="fa-solid fa-bell"></i>
+        </button>
+        <button class="top-bar-icon">
+          <i class="fa-solid fa-calendar"></i>
+        </button>
+        <div class="user-menu" id="user-menu">
+          <div class="user-avatar" id="user-avatar">--</div>
+          <span class="user-name" id="user-name">Loading...</span>
+          <i class="fa-solid fa-chevron-down user-dropdown-icon"></i>
+          
+          <div class="user-dropdown" id="user-dropdown">
+            <div class="user-dropdown-header">
+              <div class="user-dropdown-name" id="dropdown-full-name">--</div>
+              <div class="user-dropdown-username" id="dropdown-username">@--</div>
+            </div>
+            <ul class="user-dropdown-menu">
+              <li class="user-dropdown-item" id="change-password-btn">
+                <i class="fa-solid fa-key"></i>
+                <span>Đổi mật khẩu</span>
+              </li>
+              <li class="user-dropdown-item logout" id="logout-btn">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Đăng xuất</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="content-wrapper">
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-4">
+        <div class="page-header">
+          <h1 class="page-title">Quản lý Users</h1>
+          <p class="page-subtitle">Quản lý tài khoản người dùng trong hệ thống</p>
+        </div>
+        <button id="add-user-btn" class="btn btn-primary">
+          <i class="fa-solid fa-user-plus"></i>
+          Tạo tài khoản
+        </button>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters">
+        <input 
+          type="text" 
+          id="search-input" 
+          name="user-search-query"
+          placeholder="Tìm kiếm theo tên, email..."
+          class="form-input"
+          autocomplete="new-password"
+          data-form-type="other"
+        >
+        <select id="filter-role" class="form-input">
+          <option value="">Tất cả vai trò</option>
+          <option value="admin">Admin</option>
+          <option value="security">Security</option>
+          <option value="supervisor">Supervisor</option>
+          <option value="user">User</option>
+        </select>
+        <select id="filter-status" class="form-input">
+          <option value="">Tất cả trạng thái</option>
+          <option value="true">Đang hoạt động</option>
+          <option value="false">Đã vô hiệu</option>
+        </select>
+      </div>
+
+      <!-- Table -->
+      <div class="card">
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Họ tên</th>
+                <th>Vai trò</th>
+                <th>Kho truy cập</th>
+                <th>Trạng thái</th>
+                <th>Ngày tạo</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="users-table"></tbody>
+          </table>
+        </div>
+        <div id="no-users" class="empty-state hidden">
+          <div class="empty-icon">
+            <i class="fa-solid fa-users"></i>
+          </div>
+          <p class="empty-title">Chưa có user nào</p>
+          <p class="empty-text">Hãy tạo tài khoản đầu tiên!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add User Modal -->
+  <div class="modal-overlay" id="user-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-title" class="modal-title">Tạo tài khoản mới</h3>
+        <button class="modal-close" id="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="user-id">
+
+        <div class="form-group">
+          <label class="form-label form-label-required">Email</label>
+          <div class="input-with-icon">
+            <i class="fa-solid fa-envelope input-icon"></i>
+            <input type="email" id="user-email" class="form-input" placeholder="VD: user@company.com" required>
+          </div>
+          <small class="form-hint">Email dùng để đăng nhập vào hệ thống</small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label form-label-required">Họ và tên</label>
+          <div class="input-with-icon">
+            <i class="fa-solid fa-id-card input-icon"></i>
+            <input type="text" id="user-fullname" class="form-input" placeholder="VD: Nguyễn Văn A" required>
+          </div>
+        </div>
+
+        <div class="form-group" id="password-group">
+          <label class="form-label form-label-required">Mật khẩu</label>
+          <div class="input-with-icon">
+            <i class="fa-solid fa-lock input-icon"></i>
+            <input type="password" id="user-password" class="form-input" placeholder="Tối thiểu 6 ký tự" minlength="6">
+          </div>
+        </div>
+
+        <div class="form-group" id="confirm-password-group">
+          <label class="form-label form-label-required">Xác nhận mật khẩu</label>
+          <div class="input-with-icon">
+            <i class="fa-solid fa-lock input-icon"></i>
+            <input type="password" id="user-confirm-password" class="form-input" placeholder="Nhập lại mật khẩu">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label form-label-required">Vai trò</label>
+          <div class="input-with-icon">
+            <i class="fa-solid fa-user-tag input-icon"></i>
+            <select id="user-role" class="form-input" required>
+              <option value="user">User - Chỉ Scan và Lịch sử</option>
+              <option value="supervisor">Supervisor - Quản lý theo kho được giao</option>
+              <option value="security">Security - Quản lý đầy đủ, toàn kho</option>
+              <option value="admin">Admin - Toàn quyền</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Warehouse Access (hiện khi chọn supervisor hoặc user) -->
+        <div class="form-group" id="warehouse-access-group" style="display:none;">
+          <label class="form-label">Quyền truy cập kho</label>
+          <div id="warehouse-checkboxes" class="warehouse-checkbox-list">
+            <div class="warehouse-checkbox-item">
+              <label class="checkbox-label">
+                <input type="checkbox" id="warehouse-access-all" value="all" checked>
+                <span>Tất cả kho</span>
+              </label>
+            </div>
+            <!-- Warehouses loaded dynamically -->
+          </div>
+          <small class="form-hint">Chọn kho mà người dùng được phép truy cập</small>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="modal-cancel" class="btn btn-secondary">Huỷ</button>
+        <button id="modal-save" class="btn btn-primary">
+          <i class="fa-solid fa-check"></i>
+          Lưu
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/imei-control/js/common.js"></script>
+  <script src="/imei-control/js/users.js?v=2"></script>
+</body>
+</html>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IMEI Control - Quản lý Blacklist</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/imei-control/css/style.css">
+</head>
+<body>
+  <script>
+    (function() {
+      const role = localStorage.getItem('userRole');
+      if (role) document.body.classList.add('role-' + role);
+    })();
+  </script>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text">
+        <img src="/imei-control/img/spx_logo.png" alt="SPX Logo" class="logo-image">
+        <span class="logo-sub">IMEI Control</span>
+      </div>
+    </div>
+
+    <div class="warehouse-filter">
+      <label class="warehouse-filter-label">
+        <i class="fa-solid fa-warehouse"></i>
+        Chọn kho
+      </label>
+      <select id="warehouse-filter" class="warehouse-select">
+        <option value="">Đang tải...</option>
+      </select>
+    </div>
+
+    <ul class="sidebar-menu">
+      <li class="sidebar-menu-item hide-supervisor">
+        <a href="/imei-control/" class="sidebar-menu-link">
+          <i class="fa-solid fa-barcode sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Scan IMEI</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item supervisor-only">
+        <a href="/imei-control/devices" class="sidebar-menu-link">
+          <i class="fa-solid fa-microchip sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý thiết bị</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item supervisor-only">
+        <a href="/imei-control/warehouses" class="sidebar-menu-link">
+          <i class="fa-solid fa-building sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý kho</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item supervisor-only">
+        <a href="/imei-control/departments" class="sidebar-menu-link">
+          <i class="fa-solid fa-sitemap sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý bộ phận</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item">
+        <a href="/imei-control/history" class="sidebar-menu-link">
+          <i class="fa-solid fa-clock-rotate-left sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Lịch sử</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item admin-security-only">
+        <a href="/imei-control/users" class="sidebar-menu-link">
+          <i class="fa-solid fa-users sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý Users</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item admin-user-only">
+        <a href="/imei-control/scan-blacklist" class="sidebar-menu-link">
+          <i class="fa-solid fa-id-card-clip sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Scan Blacklist</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item admin-only">
+        <a href="/imei-control/blacklist" class="sidebar-menu-link active">
+          <i class="fa-solid fa-user-slash sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý Blacklist</span>
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- Main Wrapper -->
+  <div class="main-wrapper">
+    <!-- Top Bar -->
+    <header class="top-bar">
+      <div class="breadcrumb">
+        <span class="breadcrumb-item">
+          <i class="fa-solid fa-warehouse"></i>
+          IMEI Control
+        </span>
+        <span class="breadcrumb-separator">/</span>
+        <span class="breadcrumb-item breadcrumb-active">Quản lý Blacklist</span>
+      </div>
+
+      <div class="top-bar-actions">
+        <button class="top-bar-icon has-notification">
+          <i class="fa-solid fa-bell"></i>
+        </button>
+        <button class="top-bar-icon">
+          <i class="fa-solid fa-calendar"></i>
+        </button>
+        <div class="user-menu" id="user-menu">
+          <div class="user-avatar" id="user-avatar">--</div>
+          <span class="user-name" id="user-name">Loading...</span>
+          <i class="fa-solid fa-chevron-down user-dropdown-icon"></i>
+
+          <div class="user-dropdown" id="user-dropdown">
+            <div class="user-dropdown-header">
+              <div class="user-dropdown-name" id="dropdown-full-name">--</div>
+              <div class="user-dropdown-username" id="dropdown-username">@--</div>
+            </div>
+            <ul class="user-dropdown-menu">
+              <li class="user-dropdown-item" id="change-password-btn">
+                <i class="fa-solid fa-key"></i>
+                <span>Đổi mật khẩu</span>
+              </li>
+              <li class="user-dropdown-item logout" id="logout-btn">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Đăng xuất</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="content-wrapper">
+      <div class="card">
+        <div class="card-padding">
+          <!-- Header row -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+            <div>
+              <h2 class="page-title" style="margin-bottom:4px;">
+                <i class="fa-solid fa-user-slash" style="color:#e74c3c;margin-right:8px;"></i>
+                Quản lý Blacklist
+              </h2>
+              <p class="page-subtitle">Danh sách cá nhân bị hạn chế ra vào kho</p>
+            </div>
+            <button id="bl-add-btn" class="btn btn-primary">
+              <i class="fa-solid fa-plus"></i>
+              Thêm vào Blacklist
+            </button>
+          </div>
+
+          <!-- Search -->
+          <div style="margin-bottom:16px;">
+            <input
+              type="text"
+              id="bl-search"
+              class="form-input"
+              placeholder="Tìm kiếm theo họ tên, CCCD, đơn vị..."
+              style="max-width:380px;"
+            >
+          </div>
+
+          <!-- Table -->
+          <div style="overflow-x:auto;">
+            <table class="data-table" style="width:100%;border-collapse:collapse;">
+              <thead>
+                <tr>
+                  <th>Họ và tên</th>
+                  <th>Số CCCD</th>
+                  <th>Địa chỉ</th>
+                  <th>Đơn vị</th>
+                  <th>Lý do</th>
+                  <th>Thời hạn</th>
+                  <th>Tạo bởi</th>
+                  <th style="width:90px;">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody id="bl-tbody">
+                <tr>
+                  <td colspan="8" style="text-align:center;padding:40px;color:#aaa;">
+                    <i class="fa-solid fa-spinner fa-spin" style="font-size:24px;"></i>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div id="bl-pagination" style="display:flex;align-items:center;gap:8px;margin-top:16px;flex-wrap:wrap;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <div class="modal-overlay" id="bl-modal" style="display:none;">
+    <div class="modal-content" style="max-width:560px;width:100%;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <h3 class="modal-title" id="bl-modal-title">Thêm vào Blacklist</h3>
+        <button id="bl-modal-close-btn" class="btn btn-secondary" style="padding:4px 10px;">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="form-group">
+          <label class="form-label form-label-required">Họ và tên</label>
+          <input type="text" id="bl-full-name" class="form-input" placeholder="Nguyễn Văn A">
+        </div>
+        <div class="form-group">
+          <label class="form-label form-label-required">Số CCCD</label>
+          <input type="text" id="bl-cccd" class="form-input font-mono" placeholder="012345678901">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Địa chỉ</label>
+        <input type="text" id="bl-address" class="form-input" placeholder="Địa chỉ thường trú">
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="form-group">
+          <label class="form-label">Đơn vị</label>
+          <input type="text" id="bl-unit" class="form-input" placeholder="Tên công ty, tổ chức...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Thời hạn Blacklist</label>
+          <input type="date" id="bl-expires-at" class="form-input">
+          <small style="color:#aaa;font-size:11px;">Để trống = vĩnh viễn</small>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Thông tin xe / phương tiện liên quan</label>
+        <input type="text" id="bl-vehicle-info" class="form-input" placeholder="Biển số, loại xe...">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Lý do Blacklist</label>
+        <textarea id="bl-reason" class="form-input" rows="3" placeholder="Mô tả lý do..." style="resize:vertical;"></textarea>
+      </div>
+
+      <div class="modal-footer">
+        <button id="bl-modal-cancel" class="btn btn-secondary">Huỷ</button>
+        <button id="bl-modal-save" class="btn btn-primary">
+          <i class="fa-solid fa-check"></i>
+          Lưu
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <script src="/imei-control/js/common.js"></script>
+  <script src="/imei-control/js/blacklist.js"></script>
+</body>
+</html>

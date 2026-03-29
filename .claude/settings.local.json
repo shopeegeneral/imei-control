@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:greennode.vn)",
+      "Bash(ssh -p 234 -o BatchMode=yes -o ConnectTimeout=10 haugiang@103.245.255.153 \"echo connected\")"
+    ]
+  }
+}

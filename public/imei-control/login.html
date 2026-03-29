@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đăng nhập - IMEI Control</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/imei-control/css/style.css">
+</head>
+<body>
+  
+  <div class="auth-container">
+    <div class="auth-box">
+      <div class="auth-header">
+        <div class="auth-logo">
+          <i class="fa-solid fa-warehouse"></i>
+        </div>
+        <h1 class="auth-title">IMEI Control</h1>
+        <p class="auth-subtitle">Hệ thống quản lý thiết bị</p>
+      </div>
+
+      <form id="login-form" class="auth-form">
+        <div class="form-group">
+          <label class="form-label form-label-required">Email</label>
+          <div class="input-with-icon">
+            <i class="fa-solid fa-envelope input-icon"></i>
+            <input 
+              type="email" 
+              id="email" 
+              class="form-input" 
+              placeholder="Nhập email"
+              autocomplete="email"
+              required
+            >
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label form-label-required">Mật khẩu</label>
+          <div class="input-with-icon">
+            <i class="fa-solid fa-lock input-icon"></i>
+            <input 
+              type="password" 
+              id="password" 
+              class="form-input" 
+              placeholder="Nhập mật khẩu"
+              autocomplete="current-password"
+              required
+            >
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="remember-me">
+            <span>Ghi nhớ đăng nhập</span>
+          </label>
+        </div>
+
+        <div id="error-message" class="error-message" style="display: none;"></div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="login-btn">
+          <i class="fa-solid fa-right-to-bracket"></i>
+          Đăng nhập
+        </button>
+
+        <div class="auth-footer">
+          <p>Chưa có tài khoản? <a href="/imei-control/register">Đăng ký ngay</a></p>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/imei-control/js/login.js"></script>
+</body>
+</html>

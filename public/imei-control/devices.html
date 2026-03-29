@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IMEI Control - Thiết bị</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/imei-control/css/style.css">
+</head>
+<body>
+  <script>
+    // Set role class immediately from localStorage to prevent menu flash
+    (function() {
+      const role = localStorage.getItem('userRole');
+      if (role) {
+        document.body.classList.add('role-' + role);
+      }
+    })();
+  </script>
+  
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text">
+        <img src="/imei-control/img/spx_logo.png" alt="SPX Logo" class="logo-image">
+        <span class="logo-sub">IMEI Control</span>
+      </div>
+    </div>
+    
+    <div class="warehouse-filter">
+      <label class="warehouse-filter-label">
+        <i class="fa-solid fa-warehouse"></i>
+        Chọn kho
+      </label>
+      <select id="warehouse-filter" class="warehouse-select">
+        <option value="">Đang tải...</option>
+      </select>
+    </div>
+
+    <ul class="sidebar-menu">
+      <li class="sidebar-menu-item hide-supervisor">
+        <a href="/imei-control/" class="sidebar-menu-link">
+          <i class="fa-solid fa-barcode sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Scan IMEI</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item supervisor-only">
+        <a href="/imei-control/devices" class="sidebar-menu-link active">
+          <i class="fa-solid fa-microchip sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý thiết bị</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item supervisor-only">
+        <a href="/imei-control/warehouses" class="sidebar-menu-link">
+          <i class="fa-solid fa-building sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý kho</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item supervisor-only">
+        <a href="/imei-control/departments" class="sidebar-menu-link">
+          <i class="fa-solid fa-sitemap sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý bộ phận</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item">
+        <a href="/imei-control/history" class="sidebar-menu-link">
+          <i class="fa-solid fa-clock-rotate-left sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Lịch sử</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item admin-security-only">
+        <a href="/imei-control/users" class="sidebar-menu-link">
+          <i class="fa-solid fa-users sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý Users</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item admin-user-only">
+        <a href="/imei-control/scan-blacklist" class="sidebar-menu-link">
+          <i class="fa-solid fa-id-card-clip sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Scan Blacklist</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item admin-only">
+        <a href="/imei-control/blacklist" class="sidebar-menu-link">
+          <i class="fa-solid fa-user-slash sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý Blacklist</span>
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- Main Wrapper -->
+  <div class="main-wrapper">
+    <!-- Top Bar -->
+    <header class="top-bar">
+      <div class="breadcrumb">
+        <span class="breadcrumb-item">
+          <i class="fa-solid fa-warehouse"></i>
+          IMEI Control
+        </span>
+        <span class="breadcrumb-separator">/</span>
+        <span class="breadcrumb-item breadcrumb-active">Quản lý thiết bị</span>
+      </div>
+      
+      <div class="top-bar-actions">
+        <button class="top-bar-icon has-notification">
+          <i class="fa-solid fa-bell"></i>
+        </button>
+        <button class="top-bar-icon">
+          <i class="fa-solid fa-calendar"></i>
+        </button>
+        <div class="user-menu" id="user-menu">
+          <div class="user-avatar" id="user-avatar">--</div>
+          <span class="user-name" id="user-name">Loading...</span>
+          <i class="fa-solid fa-chevron-down user-dropdown-icon"></i>
+          
+          <div class="user-dropdown" id="user-dropdown">
+            <div class="user-dropdown-header">
+              <div class="user-dropdown-name" id="dropdown-full-name">--</div>
+              <div class="user-dropdown-username" id="dropdown-username">@--</div>
+            </div>
+            <ul class="user-dropdown-menu">
+              <li class="user-dropdown-item" id="change-password-btn">
+                <i class="fa-solid fa-key"></i>
+                <span>Đổi mật khẩu</span>
+              </li>
+              <li class="user-dropdown-item logout" id="logout-btn">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Đăng xuất</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="content-wrapper">
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-4">
+        <div class="page-header">
+          <h1 class="page-title">Quản lý thiết bị</h1>
+          <p class="page-subtitle">Thêm, sửa, xoá thiết bị trong hệ thống</p>
+        </div>
+        <div class="flex gap-2">
+          <!-- Mass Upload Dropdown -->
+          <div class="dropdown-wrapper" id="mass-upload-wrapper">
+            <button id="mass-upload-btn" class="btn btn-secondary">
+              <i class="fa-solid fa-file-arrow-up"></i>
+              Mass Upload
+              <i class="fa-solid fa-caret-down" style="margin-left: 4px;"></i>
+            </button>
+            <div class="dropdown-menu" id="mass-upload-menu">
+              <button class="dropdown-item" id="download-template-btn">
+                <i class="fa-solid fa-download"></i>
+                Tải file mẫu
+              </button>
+              <button class="dropdown-item" id="upload-file-btn">
+                <i class="fa-solid fa-upload"></i>
+                Upload File
+              </button>
+            </div>
+          </div>
+          <input type="file" id="mass-upload-input" accept=".xlsx,.xls" style="display: none;">
+          <button id="add-device-btn" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i>
+            Thêm thiết bị
+          </button>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters">
+        <input 
+          type="text" 
+          id="search-input" 
+          placeholder="Tìm theo IMEI, tên, mã NV..." 
+          class="form-input"
+        >
+        <select id="filter-status" class="form-input">
+          <option value="">Tất cả trạng thái</option>
+          <option value="IN">Trong kho (IN)</option>
+          <option value="OUT">Ngoài kho (OUT)</option>
+        </select>
+      </div>
+
+      <!-- Table -->
+      <div class="card">
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>IMEI</th>
+                <th>Mã vạch</th>
+                <th>Loại</th>
+                <th>Mã NV</th>
+                <th>Họ tên</th>
+                <th>Email</th>
+                <th>Loại kho</th>
+                <th>Bộ phận</th>
+                <th>Kho</th>
+                <th>Tạo bởi</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="devices-table"></tbody>
+          </table>
+        </div>
+        <div id="no-devices" class="empty-state hidden">
+          <div class="empty-icon">
+            <i class="fa-solid fa-microchip"></i>
+          </div>
+          <p class="empty-title">Chưa có thiết bị nào</p>
+          <p class="empty-text">Hãy thêm thiết bị đầu tiên!</p>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div id="devices-pagination"></div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Device Modal -->
+  <div class="modal-overlay" id="device-modal">
+    <div class="modal-content">
+      <h3 id="modal-title" class="modal-title">Thêm thiết bị</h3>
+      <input type="hidden" id="device-id">
+
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="form-group">
+          <label class="form-label form-label-required">IMEI</label>
+          <input type="text" id="device-imei" placeholder="Nhập số IMEI" class="form-input font-mono">
+        </div>
+        <div class="form-group">
+          <label class="form-label form-label-required">Có mã vạch?</label>
+          <select id="device-has-barcode" class="form-input">
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="form-group">
+          <label class="form-label form-label-required">Loại thiết bị</label>
+          <input type="text" id="device-type" placeholder="VD: Phone, Tablet" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label form-label-required">Mã nhân viên</label>
+          <input type="text" id="device-employee-code" placeholder="VD: NV001" class="form-input">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label form-label-required">Họ và tên</label>
+        <input type="text" id="device-fullname" placeholder="VD: Nguyễn Văn A" class="form-input">
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="form-group">
+          <label class="form-label form-label-required">Email</label>
+          <input type="text" id="device-email" placeholder="VD: a@company.com" class="form-input">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="form-group">
+          <label class="form-label form-label-required">Loại kho</label>
+          <select id="device-warehouse-type" class="form-input">
+            <option value="">-- Chọn loại kho --</option>
+            <option value="WHS">WHS</option>
+            <option value="SOC">SOC</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label form-label-required">Bộ phận</label>
+          <select id="device-department" class="form-input" disabled>
+            <option value="">-- Chọn loại kho trước --</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Kho làm việc</label>
+        <div class="warehouse-selector">
+          <button type="button" id="select-all-warehouses" class="btn btn-secondary btn-sm">
+            <i class="fa-solid fa-check-double"></i>
+            Chọn tất cả
+          </button>
+          <div id="warehouse-checkboxes" class="warehouse-checkboxes">
+            <p style="color: #7f8c8d; font-size: 14px;">Đang tải...</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="modal-cancel" class="btn btn-secondary">Huỷ</button>
+        <button id="modal-save" class="btn btn-primary">
+          <i class="fa-solid fa-check"></i>
+          Lưu
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mass Upload Error Modal -->
+  <div class="modal-overlay" id="upload-error-modal">
+    <div class="modal-content modal-lg">
+      <div class="modal-header-row">
+        <h3 class="modal-title" style="color: #e74c3c;">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          Lỗi Upload
+        </h3>
+        <button class="modal-close-btn" id="upload-error-close">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="upload-error-summary" id="upload-error-summary"></div>
+      <div class="upload-error-table-wrapper">
+        <table class="data-table upload-error-table">
+          <thead>
+            <tr>
+              <th style="width: 80px;">Dòng</th>
+              <th>Lỗi</th>
+            </tr>
+          </thead>
+          <tbody id="upload-error-body"></tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="upload-error-ok">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/imei-control/js/common.js"></script>
+  <script src="/imei-control/js/devices.js?v=5"></script>
+</body>
+</html>

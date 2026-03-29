@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IMEI Control - Tạo tài khoản</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/imei-control/css/style.css">
+</head>
+<body>
+  <script>
+    // Set role class immediately from localStorage to prevent menu flash
+    (function() {
+      const role = localStorage.getItem('userRole');
+      if (role) {
+        document.body.classList.add('role-' + role);
+      }
+    })();
+  </script>
+  
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text">
+        <img src="/imei-control/img/spx_logo.png" alt="SPX Logo" class="logo-image">
+        <span class="logo-sub">IMEI Control</span>
+      </div>
+    </div>
+    
+    <div class="warehouse-filter">
+      <label class="warehouse-filter-label">
+        <i class="fa-solid fa-warehouse"></i>
+        Chọn kho
+      </label>
+      <select id="warehouse-filter" class="warehouse-select">
+        <option value="">Đang tải...</option>
+      </select>
+    </div>
+
+    <ul class="sidebar-menu">
+      <li class="sidebar-menu-item hide-supervisor">
+        <a href="/imei-control/" class="sidebar-menu-link">
+          <i class="fa-solid fa-barcode sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Scan IMEI</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item">
+        <a href="/imei-control/devices" class="sidebar-menu-link">
+          <i class="fa-solid fa-microchip sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý thiết bị</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item">
+        <a href="/imei-control/warehouses" class="sidebar-menu-link">
+          <i class="fa-solid fa-building sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý kho</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item">
+        <a href="/imei-control/history" class="sidebar-menu-link">
+          <i class="fa-solid fa-clock-rotate-left sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Lịch sử</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item admin-only">
+        <a href="/imei-control/register" class="sidebar-menu-link active">
+          <i class="fa-solid fa-user-plus sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Tạo tài khoản</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item admin-user-only">
+        <a href="/imei-control/scan-blacklist" class="sidebar-menu-link">
+          <i class="fa-solid fa-id-card-clip sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Scan Blacklist</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item admin-only">
+        <a href="/imei-control/blacklist" class="sidebar-menu-link">
+          <i class="fa-solid fa-user-slash sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý Blacklist</span>
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- Main Wrapper -->
+  <div class="main-wrapper">
+    <!-- Top Bar -->
+    <header class="top-bar">
+      <div class="breadcrumb">
+        <span class="breadcrumb-item">
+          <i class="fa-solid fa-warehouse"></i>
+          IMEI Control
+        </span>
+        <span class="breadcrumb-separator">/</span>
+        <span class="breadcrumb-item breadcrumb-active">Tạo tài khoản</span>
+      </div>
+      
+      <div class="top-bar-actions">
+        <button class="top-bar-icon has-notification">
+          <i class="fa-solid fa-bell"></i>
+        </button>
+        <button class="top-bar-icon">
+          <i class="fa-solid fa-calendar"></i>
+        </button>
+        <div class="user-menu" id="user-menu">
+          <div class="user-avatar" id="user-avatar">--</div>
+          <span class="user-name" id="user-name">Loading...</span>
+          <i class="fa-solid fa-chevron-down user-dropdown-icon"></i>
+          
+          <div class="user-dropdown" id="user-dropdown">
+            <div class="user-dropdown-header">
+              <div class="user-dropdown-name" id="dropdown-full-name">--</div>
+              <div class="user-dropdown-username" id="dropdown-username">@--</div>
+            </div>
+            <ul class="user-dropdown-menu">
+              <li class="user-dropdown-item" id="change-password-btn">
+                <i class="fa-solid fa-key"></i>
+                <span>Đổi mật khẩu</span>
+              </li>
+              <li class="user-dropdown-item logout" id="logout-btn">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Đăng xuất</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="page-header">
+        <h1 class="page-title">
+          <i class="fa-solid fa-user-plus"></i>
+          Tạo tài khoản mới
+        </h1>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Thông tin tài khoản</h2>
+        </div>
+        <div class="card-body">
+          <form id="register-form" class="form">
+        <div class="form-group">
+          <label class="form-label form-label-required">Email</label>
+          <div class="input-with-icon">
+            <i class="fa-solid fa-envelope input-icon"></i>
+            <input 
+              type="email" 
+              id="email" 
+              class="form-input" 
+              placeholder="VD: user@company.com"
+              autocomplete="email"
+              required
+            >
+          </div>
+          <small class="form-hint">Email dùng để đăng nhập vào hệ thống</small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label form-label-required">Mật khẩu</label>
+          <div class="input-with-icon">
+            <i class="fa-solid fa-lock input-icon"></i>
+            <input 
+              type="password" 
+              id="password" 
+              class="form-input" 
+              placeholder="Tối thiểu 6 ký tự"
+              autocomplete="new-password"
+              required
+              minlength="6"
+            >
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label form-label-required">Xác nhận mật khẩu</label>
+          <div class="input-with-icon">
+            <i class="fa-solid fa-lock input-icon"></i>
+            <input 
+              type="password" 
+              id="confirm-password" 
+              class="form-input" 
+              placeholder="Nhập lại mật khẩu"
+              autocomplete="new-password"
+              required
+            >
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label form-label-required">Họ và tên</label>
+          <div class="input-with-icon">
+            <i class="fa-solid fa-id-card input-icon"></i>
+            <input 
+              type="text" 
+              id="full-name" 
+              class="form-input" 
+              placeholder="VD: Nguyễn Văn A"
+              autocomplete="name"
+              required
+            >
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label form-label-required">Vai trò</label>
+          <div class="input-with-icon">
+            <i class="fa-solid fa-user-tag input-icon"></i>
+            <select id="role" class="form-input" required>
+              <option value="user">User - Chỉ Scan và Lịch sử</option>
+              <option value="supervisor">Supervisor - Quản lý đầy đủ (không tạo account)</option>
+              <option value="admin">Admin - Toàn quyền</option>
+            </select>
+          </div>
+          <small class="form-hint">Chọn vai trò phù hợp với công việc của người dùng</small>
+        </div>
+
+        <div id="error-message" class="error-message" style="display: none;"></div>
+        <div id="success-message" class="success-message" style="display: none;"></div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-success" id="register-btn">
+            <i class="fa-solid fa-user-plus"></i>
+            Tạo tài khoản
+          </button>
+          <button type="reset" class="btn btn-secondary">
+            <i class="fa-solid fa-rotate-left"></i>
+            Đặt lại
+          </button>
+        </div>
+      </form>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/imei-control/js/common.js"></script>
+  <script src="/imei-control/js/register.js"></script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+{
+  "name": "addpicking",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "axios": "^1.10.0",
+    "bcrypt": "^6.0.0",
+    "canvas": "^3.2.1",
+    "connect-pg-simple": "^10.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dayjs": "^1.11.13",
+    "dotenv": "^17.0.0",
+    "ejs": "^3.1.10",
+    "exceljs": "^4.4.0",
+    "express": "^5.1.0",
+    "express-session": "^1.19.0",
+    "google-auth-library": "^10.4.1",
+    "jsbarcode": "^3.12.3",
+    "jszip": "^3.10.1",
+    "multer": "^2.0.2",
+    "node-fetch": "^2.7.0",
+    "pdf-lib": "^1.17.1",
+    "pdf-parse": "^2.4.5",
+    "pdf-to-printer": "^5.6.0",
+    "pg": "^8.14.1",
+    "qrcode": "^1.5.4",
+    "sharp": "^0.34.3",
+    "timezone-support": "^3.1.0",
+    "utc": "^0.1.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17"
+  }
+}

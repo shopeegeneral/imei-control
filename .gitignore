@@ -1,0 +1,9 @@
+node_modules/
+.env
+uploads/
+uploads_excel/
+uploads_tickets/
+storage/
+output/
+backups/
+*.log

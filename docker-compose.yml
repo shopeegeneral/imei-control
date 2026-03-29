@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: my-project-app
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=0134679258q
+      - DB_NAME=postgres
+      - SESSION_SECRET=random_string_here
+      - SESSION_TTL_DAYS=7
+      - PORT=3000
+      # Cập nhật các URL callback nếu dùng domain VPS thật
+      - REDIRECT_URI=http://your-vps-ip:3000/auth/callback
+      - GOOGLE_CALLBACK_URL=http://your-vps-ip:3000/auth/callback
+      - GOOGLE_CLIENT_ID=613012882587-hrvmfdlsn15vhpj43gd9bol8fnu8lv65.apps.googleusercontent.com
+      - GOOGLE_CLIENT_SECRET=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
+      - SEATALK_APP_ID=MTg2ODM3OTA4NjQ0
+      - SEATALK_APP_SECRET=tNZQkbNvTDrrlSJIdKibtN7huxnw_O23
+    volumes:
+      - ./uploads:/app/uploads
+      - ./uploads_tickets:/app/uploads_tickets
+      - ./uploads_excel:/app/uploads_excel
+      - ./storage:/app/storage
+      - ./output:/app/output
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:15
+    container_name: my-project-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=0134679258q
+      - POSTGRES_DB=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Bỏ comment dòng dưới nếu muốn import backup SQL khi khởi tạo lần đầu:
+      # - ./ibticket_FULL_BACKUP.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

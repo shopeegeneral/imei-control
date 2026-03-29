@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IMEI Control - Scan</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/imei-control/css/style.css">
+</head>
+<body>
+  <script>
+    // Set role class immediately from localStorage to prevent menu flash
+    (function() {
+      const role = localStorage.getItem('userRole');
+      if (role) {
+        document.body.classList.add('role-' + role);
+      }
+    })();
+  </script>
+  
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text">
+        <img src="/imei-control/img/spx_logo.png" alt="SPX Logo" class="logo-image">
+        <span class="logo-sub">IMEI Control</span>
+      </div>
+    </div>
+    
+    <div class="warehouse-filter">
+      <label class="warehouse-filter-label">
+        <i class="fa-solid fa-warehouse"></i>
+        Chọn kho
+      </label>
+      <select id="warehouse-filter" class="warehouse-select">
+        <option value="">Đang tải...</option>
+      </select>
+    </div>
+
+    <ul class="sidebar-menu">
+      <li class="sidebar-menu-item hide-supervisor">
+        <a href="/imei-control/" class="sidebar-menu-link active">
+          <i class="fa-solid fa-barcode sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Scan IMEI</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item supervisor-only">
+        <a href="/imei-control/devices" class="sidebar-menu-link">
+          <i class="fa-solid fa-microchip sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý thiết bị</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item supervisor-only">
+        <a href="/imei-control/warehouses" class="sidebar-menu-link">
+          <i class="fa-solid fa-building sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý kho</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item supervisor-only">
+        <a href="/imei-control/departments" class="sidebar-menu-link">
+          <i class="fa-solid fa-sitemap sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý bộ phận</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item">
+        <a href="/imei-control/history" class="sidebar-menu-link">
+          <i class="fa-solid fa-clock-rotate-left sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Lịch sử</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item admin-security-only">
+        <a href="/imei-control/users" class="sidebar-menu-link">
+          <i class="fa-solid fa-users sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý Users</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item admin-user-only">
+        <a href="/imei-control/scan-blacklist" class="sidebar-menu-link">
+          <i class="fa-solid fa-id-card-clip sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Scan Blacklist</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item admin-only">
+        <a href="/imei-control/blacklist" class="sidebar-menu-link">
+          <i class="fa-solid fa-user-slash sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý Blacklist</span>
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- Main Wrapper -->
+  <div class="main-wrapper">
+    <!-- Top Bar -->
+    <header class="top-bar">
+      <div class="breadcrumb">
+        <span class="breadcrumb-item">
+          <i class="fa-solid fa-warehouse"></i>
+          IMEI Control
+        </span>
+        <span class="breadcrumb-separator">/</span>
+        <span class="breadcrumb-item breadcrumb-active">Scan</span>
+      </div>
+      
+      <div class="top-bar-actions">
+        <button class="top-bar-icon has-notification">
+          <i class="fa-solid fa-bell"></i>
+        </button>
+        <button class="top-bar-icon">
+          <i class="fa-solid fa-calendar"></i>
+        </button>
+        <div class="user-menu" id="user-menu">
+          <div class="user-avatar" id="user-avatar">--</div>
+          <span class="user-name" id="user-name">Loading...</span>
+          <i class="fa-solid fa-chevron-down user-dropdown-icon"></i>
+          
+          <div class="user-dropdown" id="user-dropdown">
+            <div class="user-dropdown-header">
+              <div class="user-dropdown-name" id="dropdown-full-name">--</div>
+              <div class="user-dropdown-username" id="dropdown-username">@--</div>
+            </div>
+            <ul class="user-dropdown-menu">
+              <li class="user-dropdown-item" id="change-password-btn">
+                <i class="fa-solid fa-key"></i>
+                <span>Đổi mật khẩu</span>
+              </li>
+              <li class="user-dropdown-item logout" id="logout-btn">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Đăng xuất</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="content-wrapper">
+      <!-- Tabs -->
+      <div class="tabs" style="display: none;">
+        <a href="#" class="tab-item active">Scan</a>
+        <a href="#" class="tab-item">Idle(0)</a>
+        <a href="#" class="tab-item">History Idle</a>
+      </div>
+
+      <!-- Two Column Layout -->
+      <div class="scan-layout">
+        <!-- Left Column -->
+        <div class="scan-left">
+          <!-- Scan Card -->
+          <div class="card mb-4">
+            <div class="card-padding">
+              <!-- <h2 class="page-title mb-3">Scan IMEI</h2>
+              <p class="page-subtitle mb-4">Quét hoặc nhập mã IMEI để ghi nhận vào/ra kho</p> -->
+
+              <div class="form-group">
+                <label class="form-label form-label-required" id="scan-input-label">Scan IMEI hoặc Mã nhân viên</label>
+                <div class="flex gap-3">
+                  <input
+                    type="text"
+                    id="imei-input"
+                    class="form-input font-mono scan-input"
+                    placeholder="Scan IMEI hoặc nhập Mã nhân viên"
+                    autofocus
+                    style="flex: 1;"
+                  >
+                  <button id="scan-btn" class="btn btn-primary btn-lg">
+                    <i class="fa-solid fa-barcode"></i>
+                    Confirm
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-group" style="display: none;">
+                <label class="form-label">Người scan</label>
+                <input 
+                  type="text" 
+                  id="scanned-by" 
+                  class="form-input" 
+                  placeholder="Người scan (tuỳ chọn)"
+                >
+              </div>
+
+              <!-- Scan Result -->
+              <div id="scan-result" class="scan-result"></div>
+            </div>
+          </div>
+
+          <!-- Device Info (shown after scan) -->
+          <div id="device-info" class="hidden">
+            <div class="device-info-card">
+              <div id="device-info-header">
+                <i id="device-info-icon" style="font-size: 24px;"></i>
+                <span id="device-info-status" style="font-size: 18px; font-weight: 700; letter-spacing: 1px;"></span>
+              </div>
+              <table class="device-info-table">
+                <tbody>
+                  <tr>
+                    <td class="info-label-cell">IMEI / Service Tag</td>
+                    <td id="info-imei" class="info-value-cell font-mono"></td>
+                  </tr>
+                  <tr>
+                    <td class="info-label-cell">Loại thiết bị</td>
+                    <td id="info-type" class="info-value-cell"></td>
+                  </tr>
+                  <tr>
+                    <td class="info-label-cell">Mã nhân viên</td>
+                    <td id="info-employee-code" class="info-value-cell"></td>
+                  </tr>
+                  <tr>
+                    <td class="info-label-cell">Họ và tên</td>
+                    <td id="info-fullname" class="info-value-cell"></td>
+                  </tr>
+                  <tr>
+                    <td class="info-label-cell">Email</td>
+                    <td id="info-email" class="info-value-cell"></td>
+                  </tr>
+                  <tr>
+                    <td class="info-label-cell">Bộ phận</td>
+                    <td id="info-department" class="info-value-cell"></td>
+                  </tr>
+                  <tr>
+                    <td class="info-label-cell">Kho hiện tại</td>
+                    <td id="info-warehouse" class="info-value-cell"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column - Stats & Recent Scans -->
+        <div class="scan-right">
+          <!-- Today Stats Scorecards -->
+          <div class="scan-scorecards">
+            <div class="scorecard scorecard-in">
+              <div class="scorecard-icon">
+                <i class="fa-solid fa-arrow-right-to-bracket"></i>
+              </div>
+              <div class="scorecard-content">
+                <span class="scorecard-value" id="today-in-count">0</span>
+                <span class="scorecard-label">Vào kho hôm nay</span>
+              </div>
+            </div>
+            <div class="scorecard scorecard-out">
+              <div class="scorecard-icon">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+              </div>
+              <div class="scorecard-content">
+                <span class="scorecard-value" id="today-out-count">0</span>
+                <span class="scorecard-label">Ra kho hôm nay</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="recent-header">
+              <h3 class="recent-title">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                Recent Scans (20)
+              </h3>
+              <span class="recent-badge">Live</span>
+            </div>
+            <div class="recent-list" id="recent-scans">
+              <div class="empty-state" style="padding: 40px 20px;">
+                <div class="empty-icon" style="width: 48px; height: 48px; margin: 0 auto 12px; font-size: 20px;">
+                  <i class="fa-solid fa-clock"></i>
+                </div>
+                <p class="empty-title" style="font-size: 14px;">Chưa có scan nào</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Register Modal -->
+  <div class="modal-overlay" id="quick-register-modal">
+    <div class="modal-content">
+      <h3 class="modal-title">Đăng ký thiết bị mới</h3>
+      <p class="page-subtitle mb-4">IMEI chưa có trong hệ thống. Đăng ký nhanh để tiếp tục.</p>
+
+      <div class="form-group">
+        <label class="form-label">IMEI</label>
+        <input type="text" id="qr-imei" readonly class="form-input font-mono" style="background: #f5f7fa;">
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="form-group">
+          <label class="form-label">Loại thiết bị</label>
+          <input type="text" id="qr-device-type" placeholder="VD: Phone, Tablet" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mã nhân viên</label>
+          <input type="text" id="qr-employee-code" placeholder="VD: NV001" class="form-input">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label form-label-required">Họ và tên</label>
+        <input type="text" id="qr-fullname" placeholder="VD: Nguyễn Văn A" class="form-input">
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="text" id="qr-email" placeholder="VD: a@company.com" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Kho làm việc</label>
+          <input type="text" id="qr-warehouse" placeholder="VD: Kho HCM" class="form-input">
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="qr-cancel" class="btn btn-secondary">Huỷ</button>
+        <button id="qr-submit" class="btn btn-success">
+          <i class="fa-solid fa-check"></i>
+          Đăng ký & Check IN
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Device Picker Modal (for employee_code scan with multiple devices) -->
+  <div class="modal-overlay" id="device-picker-modal">
+    <div class="modal-content" style="max-width: 500px;">
+      <h3 class="modal-title"><i class="fa-solid fa-mobile-screen-button"></i> Chọn thiết bị để scan</h3>
+      <p class="page-subtitle mb-3">Mã nhân viên có nhiều thiết bị. Vui lòng chọn thiết bị cần scan:</p>
+      <div id="device-picker-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 360px; overflow-y: auto;"></div>
+      <div class="modal-footer" style="margin-top: 16px;">
+        <button id="device-picker-cancel" class="btn btn-secondary">Huỷ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <script src="/imei-control/js/common.js"></script>
+  <script src="/imei-control/js/scan.js?v=3"></script>
+</body>
+</html>

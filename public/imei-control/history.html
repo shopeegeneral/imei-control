@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IMEI Control - Lịch sử</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/imei-control/css/style.css">
+</head>
+<body>
+  <script>
+    // Set role class immediately from localStorage to prevent menu flash
+    (function() {
+      const role = localStorage.getItem('userRole');
+      if (role) {
+        document.body.classList.add('role-' + role);
+      }
+    })();
+  </script>
+  
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text">
+        <img src="/imei-control/img/spx_logo.png" alt="SPX Logo" class="logo-image">
+        <span class="logo-sub">IMEI Control</span>
+      </div>
+    </div>
+    
+    <div class="warehouse-filter">
+      <label class="warehouse-filter-label">
+        <i class="fa-solid fa-warehouse"></i>
+        Chọn kho
+      </label>
+      <select id="warehouse-filter" class="warehouse-select">
+        <option value="">Đang tải...</option>
+      </select>
+    </div>
+
+    <ul class="sidebar-menu">
+      <li class="sidebar-menu-item hide-supervisor">
+        <a href="/imei-control/" class="sidebar-menu-link">
+          <i class="fa-solid fa-barcode sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Scan IMEI</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item supervisor-only">
+        <a href="/imei-control/devices" class="sidebar-menu-link">
+          <i class="fa-solid fa-microchip sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý thiết bị</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item supervisor-only">
+        <a href="/imei-control/warehouses" class="sidebar-menu-link">
+          <i class="fa-solid fa-building sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý kho</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item supervisor-only">
+        <a href="/imei-control/departments" class="sidebar-menu-link">
+          <i class="fa-solid fa-sitemap sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý bộ phận</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item">
+        <a href="/imei-control/history" class="sidebar-menu-link active">
+          <i class="fa-solid fa-clock-rotate-left sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Lịch sử</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item admin-security-only">
+        <a href="/imei-control/users" class="sidebar-menu-link">
+          <i class="fa-solid fa-users sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý Users</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item admin-user-only">
+        <a href="/imei-control/scan-blacklist" class="sidebar-menu-link">
+          <i class="fa-solid fa-id-card-clip sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Scan Blacklist</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item admin-only">
+        <a href="/imei-control/blacklist" class="sidebar-menu-link">
+          <i class="fa-solid fa-user-slash sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Quản lý Blacklist</span>
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- Main Wrapper -->
+  <div class="main-wrapper">
+    <!-- Top Bar -->
+    <header class="top-bar">
+      <div class="breadcrumb">
+        <span class="breadcrumb-item">
+          <i class="fa-solid fa-warehouse"></i>
+          IMEI Control
+        </span>
+        <span class="breadcrumb-separator">/</span>
+        <span class="breadcrumb-item breadcrumb-active">Lịch sử</span>
+      </div>
+      
+      <div class="top-bar-actions">
+        <button class="top-bar-icon has-notification">
+          <i class="fa-solid fa-bell"></i>
+        </button>
+        <button class="top-bar-icon">
+          <i class="fa-solid fa-calendar"></i>
+        </button>
+        <div class="user-menu" id="user-menu">
+          <div class="user-avatar" id="user-avatar">--</div>
+          <span class="user-name" id="user-name">Loading...</span>
+          <i class="fa-solid fa-chevron-down user-dropdown-icon"></i>
+          
+          <div class="user-dropdown" id="user-dropdown">
+            <div class="user-dropdown-header">
+              <div class="user-dropdown-name" id="dropdown-full-name">--</div>
+              <div class="user-dropdown-username" id="dropdown-username">@--</div>
+            </div>
+            <ul class="user-dropdown-menu">
+              <li class="user-dropdown-item" id="change-password-btn">
+                <i class="fa-solid fa-key"></i>
+                <span>Đổi mật khẩu</span>
+              </li>
+              <li class="user-dropdown-item logout" id="logout-btn">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Đăng xuất</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="content-wrapper">
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="card stat-card stat-blue">
+          <div class="stat-icon">
+            <i class="fa-solid fa-layer-group"></i>
+          </div>
+          <div class="stat-content">
+            <div id="stat-total" class="stat-value">-</div>
+            <div class="stat-label">Tổng thiết bị</div>
+          </div>
+        </div>
+        <div class="card stat-card stat-green">
+          <div class="stat-icon">
+            <i class="fa-solid fa-right-to-bracket"></i>
+          </div>
+          <div class="stat-content">
+            <div id="stat-in" class="stat-value">-</div>
+            <div class="stat-label">Trong kho</div>
+          </div>
+        </div>
+        <div class="card stat-card stat-red">
+          <div class="stat-icon">
+            <i class="fa-solid fa-right-from-bracket"></i>
+          </div>
+          <div class="stat-content">
+            <div id="stat-out" class="stat-value">-</div>
+            <div class="stat-label">Ngoài kho</div>
+          </div>
+        </div>
+        <div class="card stat-card stat-orange">
+          <div class="stat-icon">
+            <i class="fa-solid fa-bolt"></i>
+          </div>
+          <div class="stat-content">
+            <div id="stat-today" class="stat-value">-</div>
+            <div class="stat-label">Scan hôm nay</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-4">
+        <div class="page-header">
+          <h1 class="page-title">Lịch sử scan</h1>
+          <p class="page-subtitle">Tra cứu toàn bộ lượt scan vào/ra kho</p>
+        </div>
+        <button id="export-btn" class="btn btn-secondary">
+          <i class="fa-solid fa-file-export"></i>
+          Export CSV
+        </button>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters">
+        <input 
+          type="text" 
+          id="filter-imei" 
+          placeholder="Tìm theo IMEI..." 
+          class="form-input"
+        >
+        <select id="filter-action" class="form-input">
+          <option value="">Tất cả</option>
+          <option value="IN">Vào kho (IN)</option>
+          <option value="OUT">Ra kho (OUT)</option>
+        </select>
+        <input 
+          type="date" 
+          id="filter-from" 
+          class="form-input" 
+          title="Từ ngày"
+        >
+        <input 
+          type="date" 
+          id="filter-to" 
+          class="form-input" 
+          title="Đến ngày"
+        >
+        <button id="filter-btn" class="btn btn-primary">
+          <i class="fa-solid fa-filter"></i>
+          Lọc
+        </button>
+      </div>
+
+      <!-- Table -->
+      <div class="card">
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>IMEI</th>
+                <th>Họ tên</th>
+                <th>Kho</th>
+                <th>Hành động</th>
+                <th>Người scan</th>
+                <th>Thời gian</th>
+              </tr>
+            </thead>
+            <tbody id="history-table"></tbody>
+          </table>
+        </div>
+        <div id="no-history" class="empty-state hidden">
+          <div class="empty-icon">
+            <i class="fa-regular fa-clock"></i>
+          </div>
+          <p class="empty-title">Chưa có lịch sử scan nào</p>
+        </div>
+        <div id="pagination"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/imei-control/js/common.js"></script>
+  <script src="/imei-control/js/history.js"></script>
+</body>
+</html>
