@@ -45,6 +45,12 @@
         </a>
       </li>
       <li class="sidebar-menu-item supervisor-only">
+        <a href="/imei-control/check-device" class="sidebar-menu-link">
+          <i class="fa-solid fa-magnifying-glass sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Kiểm tra thiết bị</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item supervisor-only">
         <a href="/imei-control/devices" class="sidebar-menu-link active">
           <i class="fa-solid fa-microchip sidebar-menu-icon"></i>
           <span class="sidebar-menu-text">Quản lý thiết bị</span>
@@ -143,6 +149,10 @@
           <p class="page-subtitle">Thêm, sửa, xoá thiết bị trong hệ thống</p>
         </div>
         <div class="flex gap-2">
+          <button id="export-devices-btn" class="btn btn-secondary">
+            <i class="fa-solid fa-file-export"></i>
+            Export Data
+          </button>
           <!-- Mass Upload Dropdown -->
           <div class="dropdown-wrapper" id="mass-upload-wrapper">
             <button id="mass-upload-btn" class="btn btn-secondary">
@@ -162,6 +172,24 @@
             </div>
           </div>
           <input type="file" id="mass-upload-input" accept=".xlsx,.xls" style="display: none;">
+          <div class="dropdown-wrapper" id="mass-modify-wrapper">
+            <button id="mass-modify-btn" class="btn btn-secondary">
+              <i class="fa-solid fa-file-pen"></i>
+              Mass Modify
+              <i class="fa-solid fa-caret-down" style="margin-left: 4px;"></i>
+            </button>
+            <div class="dropdown-menu" id="mass-modify-menu">
+              <button class="dropdown-item" id="download-modify-template-btn">
+                <i class="fa-solid fa-download"></i>
+                Tải file mẫu
+              </button>
+              <button class="dropdown-item" id="upload-modify-file-btn">
+                <i class="fa-solid fa-upload"></i>
+                Upload File
+              </button>
+            </div>
+          </div>
+          <input type="file" id="mass-modify-input" accept=".xlsx,.xls" style="display: none;">
           <button id="add-device-btn" class="btn btn-primary">
             <i class="fa-solid fa-plus"></i>
             Thêm thiết bị
@@ -177,11 +205,24 @@
           placeholder="Tìm theo IMEI, tên, mã NV..." 
           class="form-input"
         >
-        <select id="filter-status" class="form-input">
-          <option value="">Tất cả trạng thái</option>
-          <option value="IN">Trong kho (IN)</option>
-          <option value="OUT">Ngoài kho (OUT)</option>
+        <select id="filter-has-barcode" class="form-input">
+          <option value="">Mã vạch: Tất cả</option>
+          <option value="yes">Có mã vạch: Yes</option>
+          <option value="no">Có mã vạch: No</option>
         </select>
+        <select id="filter-department" class="form-input">
+          <option value="">Bộ phận: Tất cả</option>
+        </select>
+        <input
+          type="date"
+          id="filter-created-date"
+          class="form-input"
+          title="Ngày tạo"
+        >
+        <button id="clear-filters-btn" class="btn btn-secondary" type="button">
+          <i class="fa-solid fa-filter-circle-xmark"></i>
+          Clear Filter
+        </button>
       </div>
 
       <!-- Table -->
@@ -190,16 +231,17 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th>IMEI</th>
-                <th>Mã vạch</th>
-                <th>Loại</th>
-                <th>Mã NV</th>
-                <th>Họ tên</th>
-                <th>Email</th>
-                <th>Loại kho</th>
-                <th>Bộ phận</th>
-                <th>Kho</th>
-                <th>Tạo bởi</th>
+                <th><span class="sort-trigger" data-sort="imei" role="button" tabindex="0">IMEI <span class="sort-indicator">↕</span></span></th>
+                <th><span class="sort-trigger" data-sort="has_barcode" role="button" tabindex="0">Mã vạch <span class="sort-indicator">↕</span></span></th>
+                <th><span class="sort-trigger" data-sort="device_type" role="button" tabindex="0">Loại <span class="sort-indicator">↕</span></span></th>
+                <th><span class="sort-trigger" data-sort="employee_code" role="button" tabindex="0">Mã NV <span class="sort-indicator">↕</span></span></th>
+                <th><span class="sort-trigger" data-sort="full_name" role="button" tabindex="0">Họ tên <span class="sort-indicator">↕</span></span></th>
+                <th><span class="sort-trigger" data-sort="email" role="button" tabindex="0">Email <span class="sort-indicator">↕</span></span></th>
+                <th><span class="sort-trigger" data-sort="is_active" role="button" tabindex="0">Trạng thái <span class="sort-indicator">↕</span></span></th>
+                <th><span class="sort-trigger" data-sort="active_until" role="button" tabindex="0">Active đến ngày <span class="sort-indicator">↕</span></span></th>
+                <th><span class="sort-trigger" data-sort="department_name" role="button" tabindex="0">Bộ phận <span class="sort-indicator">↕</span></span></th>
+                <th><span class="sort-trigger" data-sort="created_at" role="button" tabindex="0">Ngày tạo <span class="sort-indicator">↕</span></span></th>
+                <th><span class="sort-trigger" data-sort="created_by_name" role="button" tabindex="0">Tạo bởi <span class="sort-indicator">↕</span></span></th>
                 <th>Thao tác</th>
               </tr>
             </thead>
@@ -261,6 +303,21 @@
           <label class="form-label form-label-required">Email</label>
           <input type="text" id="device-email" placeholder="VD: a@company.com" class="form-input">
         </div>
+        <div class="form-group">
+          <label class="form-label">Kiểu active</label>
+          <select id="device-active-mode" class="form-input">
+            <option value="permanent">Vĩnh viễn</option>
+            <option value="limited">Có thời hạn</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="form-group">
+          <label class="form-label">Active đến ngày</label>
+          <input type="date" id="device-active-until" class="form-input">
+        </div>
+        <div></div>
       </div>
 
       <div class="grid grid-cols-2 gap-3 mb-4">
@@ -303,6 +360,46 @@
     </div>
   </div>
 
+  <!-- Existing Device Modal (shown when IMEI already exists) -->
+  <div class="modal-overlay" id="existing-device-modal">
+    <div class="modal-content modal-lg">
+      <div class="modal-header-row">
+        <h3 class="modal-title" style="color: #e67e22;">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          Thiết bị đã được đăng ký
+        </h3>
+        <button class="modal-close-btn" id="existing-device-close">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div id="existing-device-body"></div>
+      <div class="modal-footer" id="existing-device-footer"></div>
+    </div>
+  </div>
+
+  <!-- Mass Upload Confirm Modal (shown when some IMEIs already exist) -->
+  <div class="modal-overlay" id="mass-upload-confirm-modal">
+    <div class="modal-content modal-lg">
+      <div class="modal-header-row">
+        <h3 class="modal-title" style="color: #e67e22;">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          Xác nhận Mass Upload
+        </h3>
+        <button class="modal-close-btn" id="mass-confirm-close">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div id="mass-confirm-body"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="mass-confirm-cancel">Hủy</button>
+        <button class="btn btn-primary" id="mass-confirm-ok">
+          <i class="fa-solid fa-check"></i>
+          Xác nhận tất cả
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Mass Upload Error Modal -->
   <div class="modal-overlay" id="upload-error-modal">
     <div class="modal-content modal-lg">
@@ -334,6 +431,6 @@
   </div>
 
   <script src="/imei-control/js/common.js"></script>
-  <script src="/imei-control/js/devices.js?v=5"></script>
+  <script src="/imei-control/js/devices.js?v=6"></script>
 </body>
 </html>

@@ -3,13 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quản lý kho - IMEI Control</title>
+  <title>IMEI Control - Kiểm tra thiết bị</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="/imei-control/css/style.css">
 </head>
 <body>
   <script>
-    // Set role class immediately from localStorage to prevent menu flash
     (function() {
       const role = localStorage.getItem('userRole');
       if (role) {
@@ -30,7 +29,7 @@
     <div class="warehouse-filter">
       <label class="warehouse-filter-label">
         <i class="fa-solid fa-warehouse"></i>
-        <span>Chọn kho</span>
+        Chọn kho
       </label>
       <select id="warehouse-filter" class="warehouse-select">
         <option value="">Đang tải...</option>
@@ -45,7 +44,7 @@
         </a>
       </li>
       <li class="sidebar-menu-item supervisor-only">
-        <a href="/imei-control/check-device" class="sidebar-menu-link">
+        <a href="/imei-control/check-device" class="sidebar-menu-link active">
           <i class="fa-solid fa-magnifying-glass sidebar-menu-icon"></i>
           <span class="sidebar-menu-text">Kiểm tra thiết bị</span>
         </a>
@@ -57,7 +56,7 @@
         </a>
       </li>
       <li class="sidebar-menu-item supervisor-only">
-        <a href="/imei-control/warehouses" class="sidebar-menu-link active">
+        <a href="/imei-control/warehouses" class="sidebar-menu-link">
           <i class="fa-solid fa-building sidebar-menu-icon"></i>
           <span class="sidebar-menu-text">Quản lý kho</span>
         </a>
@@ -105,7 +104,7 @@
           IMEI Control
         </span>
         <span class="breadcrumb-separator">/</span>
-        <span class="breadcrumb-item breadcrumb-active">Quản lý kho</span>
+        <span class="breadcrumb-item breadcrumb-active">Kiểm tra thiết bị</span>
       </div>
       
       <div class="top-bar-actions">
@@ -142,98 +141,43 @@
 
     <!-- Content -->
     <div class="content-wrapper">
-      <!-- Header -->
-      <div class="flex items-center justify-between mb-4">
-        <div class="page-header">
-          <h1 class="page-title">Quản lý kho</h1>
-          <p class="page-subtitle">Thêm, sửa, xoá kho trong hệ thống</p>
-        </div>
-        <button id="add-warehouse-btn" class="btn btn-primary">
-          <i class="fa-solid fa-plus"></i>
-          Thêm kho mới
-        </button>
+      <div class="page-header">
+        <h1 class="page-title">Kiểm tra thiết bị</h1>
+        <p class="page-subtitle">Tra cứu thông tin thiết bị trên toàn bộ hệ thống, không giới hạn kho</p>
       </div>
 
-      <!-- Table Card -->
-      <div class="card" style="max-width: 800px;">
-        <div class="card-header">
-          <h3 class="card-title">
-            <i class="fa-solid fa-building"></i>
-            Danh sách kho
-          </h3>
-          <div class="card-actions">
-            <div class="search-box">
-              <i class="fa-solid fa-search"></i>
-              <input type="text" id="search-input" placeholder="Tìm kiếm kho...">
+      <!-- Search Card -->
+      <div class="card mb-4">
+        <div class="card-padding">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label form-label-required">Nhập IMEI hoặc Mã nhân viên</label>
+            <div class="flex gap-3">
+              <input
+                type="text"
+                id="check-input"
+                class="form-input font-mono scan-input"
+                placeholder="Scan IMEI hoặc nhập mã nhân viên..."
+                autofocus
+                style="flex: 1;"
+              >
+              <button id="check-btn" class="btn btn-primary btn-lg">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                Kiểm tra
+              </button>
             </div>
           </div>
         </div>
-
-        <div class="card-body">
-          <div class="table-wrapper">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th style="width: 80px;">ID</th>
-                  <th>Tên kho</th>
-                  <th style="width: 120px;">Loại kho</th>
-                  <th style="width: 120px;">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody id="warehouses-table">
-                <tr>
-                  <td colspan="4" class="text-center">
-                    <i class="fa-solid fa-spinner fa-spin"></i> Đang tải...
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
       </div>
+
+      <!-- Result -->
+      <div id="check-result"></div>
     </div>
   </div>
 
-  <!-- Add/Edit Warehouse Modal -->
-  <div id="warehouse-modal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 500px;">
-      <div class="modal-header">
-        <h3 id="modal-title">Thêm kho mới</h3>
-        <button class="modal-close" id="modal-close">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
 
-      <div class="modal-body">
-        <div class="form-group">
-          <label class="form-label form-label-required">Tên kho</label>
-          <input
-            type="text"
-            id="warehouse-name"
-            placeholder="VD: Kho HCM"
-            class="form-input"
-          >
-        </div>
-        <div class="form-group">
-          <label class="form-label form-label-required">Loại kho</label>
-          <select id="warehouse-type" class="form-input">
-            <option value="WHS">WHS</option>
-            <option value="SOC">SOC</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button id="cancel-btn" class="btn btn-secondary">Huỷ</button>
-        <button id="save-btn" class="btn btn-success">
-          <i class="fa-solid fa-check"></i>
-          Lưu
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <script src="/imei-control/js/common.js?v=2"></script>
-  <script src="/imei-control/js/warehouses.js?v=2"></script>
+  <script src="/imei-control/js/common.js"></script>
+  <script src="/imei-control/js/check-device.js"></script>
 </body>
 </html>

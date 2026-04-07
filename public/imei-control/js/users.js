@@ -167,7 +167,7 @@ function renderUsers() {
       ? '<span class="badge badge-green">Hoạt động</span>'
       : '<span class="badge badge-red">Vô hiệu</span>';
     const createdAt = new Date(user.created_at).toLocaleDateString('vi-VN');
-    const warehouseBadge = getWarehouseBadge(user.role, user.warehouse_access);
+    const warehouseBadge = getWarehouseBadge(user.role, user.warehouse_access, user.id);
 
     return `
       <tr>
@@ -226,7 +226,7 @@ function getInitials(name) {
   return name.substring(0, 2).toUpperCase();
 }
 
-function getWarehouseBadge(role, warehouseAccess) {
+function getWarehouseBadge(role, warehouseAccess, userId) {
   // admin and security always have full access
   if (['admin', 'security'].includes(role)) {
     return '<span class="badge badge-blue">Tất cả kho</span>';
@@ -242,7 +242,7 @@ function getWarehouseBadge(role, warehouseAccess) {
       const w = allWarehouses.find(wh => wh.id === id || wh.id === parseInt(id));
       return w ? w.name : `#${id}`;
     });
-    return `<span class="badge badge-gray" title="${names.join(', ')}">${ids.length} kho</span>`;
+    return `<span class="badge badge-gray warehouse-access-badge" onclick="showWarehouseAccessModal(${userId})" title="Bấm để xem chi tiết">${ids.length} kho <i class="fa-solid fa-eye" style="margin-left:4px;font-size:10px;"></i></span>`;
   } catch (e) {
     return '<span class="badge badge-blue">Tất cả kho</span>';
   }
@@ -510,6 +510,81 @@ function canManageUser(user) {
   if (myRole === 'admin') return true;
   if (myRole === 'security') return user.role === 'user';
   return false;
+}
+
+// ==================== WAREHOUSE ACCESS MODAL ====================
+
+function showWarehouseAccessModal(userId) {
+  const user = allUsers.find(u => u.id === userId);
+  if (!user) return;
+
+  let warehouseNames = [];
+  try {
+    const ids = typeof user.warehouse_access === 'string' ? JSON.parse(user.warehouse_access) : user.warehouse_access;
+    if (Array.isArray(ids)) {
+      warehouseNames = ids.map(id => {
+        const w = allWarehouses.find(wh => wh.id === id || wh.id === parseInt(id));
+        return w ? { name: w.name, type: w.warehouse_type || 'WHS' } : { name: `#${id}`, type: '?' };
+      });
+    }
+  } catch (e) { /* ignore */ }
+
+  // Remove existing modal if any
+  let existing = document.getElementById('warehouse-access-detail-modal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.id = 'warehouse-access-detail-modal';
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width: 480px;">
+      <div class="modal-header-row">
+        <h3 class="modal-title">
+          <i class="fa-solid fa-warehouse" style="color: #3498db;"></i>
+          Kho truy cập
+        </h3>
+        <button class="modal-close-btn" id="wh-access-close">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div style="padding: 16px 20px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #e2e8f0;">
+          <div class="user-cell-avatar">${getInitials(user.full_name)}</div>
+          <div>
+            <div style="font-weight:600;color:#1e293b;font-size:15px;">${user.full_name}</div>
+            <div style="font-size:13px;color:#64748b;">${user.email} • ${getRoleBadge(user.role)}</div>
+          </div>
+        </div>
+        <div style="margin-bottom:8px;font-size:13px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">
+          <i class="fa-solid fa-list"></i> ${warehouseNames.length} kho được truy cập
+        </div>
+        <div class="wh-access-list">
+          ${warehouseNames.map((w, i) => `
+            <div class="wh-access-item">
+              <div class="wh-access-num">${i + 1}</div>
+              <div class="wh-access-name">${w.name}</div>
+              <span class="badge ${w.type === 'SOC' ? 'badge-orange' : 'badge-green'}" style="font-size:11px;">${w.type}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="wh-access-ok">Đóng</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  setTimeout(() => modal.classList.add('show'), 10);
+
+  const closeModal = () => {
+    modal.classList.remove('show');
+    setTimeout(() => modal.remove(), 200);
+  };
+
+  document.getElementById('wh-access-close').addEventListener('click', closeModal);
+  document.getElementById('wh-access-ok').addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 }
 
 // ==================== INIT ====================

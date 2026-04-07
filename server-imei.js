@@ -9,6 +9,7 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const { syncExpiredDevices } = require('./utils/deviceExpiry');
 
 // Dùng 1 pool duy nhất
 const pool = require('./database/db');
@@ -71,7 +72,7 @@ const imeiSession = session({
 // IMEI CONTROL ROUTES
 // ===========================================
 app.use('/imei-control', express.static(path.join(__dirname, 'public', 'imei-control')));
-
+// app.use('/', express.static(path.join(__dirname, 'public', 'imei-control')));
 const { requireAuth, requireSupervisor, requireAdmin, requireRole, checkAuth } = require('./middleware_imei/auth');
 
 app.use('/api', imeiSession);
@@ -88,6 +89,7 @@ app.use('/api/blacklist', requireAuth, require('./routes_imei/blacklist'));
 
 app.get('/', (req, res) => res.redirect('/imei-control/login'));
 app.get('/imei-control', requireRole('admin', 'user', 'security'), (req, res) => res.sendFile(path.join(__dirname, 'public', 'imei-control', 'index.html')));
+app.get('/imei-control/check-device', requireSupervisor, (req, res) => res.sendFile(path.join(__dirname, 'public', 'imei-control', 'check-device.html')));
 app.get('/imei-control/devices', requireSupervisor, (req, res) => res.sendFile(path.join(__dirname, 'public', 'imei-control', 'devices.html')));
 app.get('/imei-control/warehouses', requireSupervisor, (req, res) => res.sendFile(path.join(__dirname, 'public', 'imei-control', 'warehouses.html')));
 app.get('/imei-control/departments', requireSupervisor, (req, res) => res.sendFile(path.join(__dirname, 'public', 'imei-control', 'departments.html')));
@@ -97,6 +99,16 @@ app.get('/imei-control/register', requireAdmin, (req, res) => res.sendFile(path.
 app.get('/imei-control/users',          requireRole('admin', 'security'), (req, res) => res.sendFile(path.join(__dirname, 'public', 'imei-control', 'users.html')));
 app.get('/imei-control/scan-blacklist', requireRole('admin', 'user'),     (req, res) => res.sendFile(path.join(__dirname, 'public', 'imei-control', 'scan-blacklist.html')));
 app.get('/imei-control/blacklist',      requireAdmin,                     (req, res) => res.sendFile(path.join(__dirname, 'public', 'imei-control', 'blacklist.html')));
+
+syncExpiredDevices(pool).catch((err) => {
+  console.error('Initial active expiry sync error:', err.message);
+});
+
+setInterval(() => {
+  syncExpiredDevices(pool).catch((err) => {
+    console.error('Scheduled active expiry sync error:', err.message);
+  });
+}, 60 * 60 * 1000);
 
 app.use((err, req, res, next) => {
   console.error('Error:', err);

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../database/db');
+const { syncExpiredDevices } = require('../utils/deviceExpiry');
 
 // POST /api/scan - Unified scan: try IMEI first, then employee_code (for has_barcode=false devices)
 router.post('/', async (req, res) => {
@@ -26,6 +27,7 @@ router.post('/', async (req, res) => {
     }
 
     await client.query('BEGIN');
+    await syncExpiredDevices(client);
 
     let device;
     let trimmedImei;
@@ -167,6 +169,14 @@ router.post('/', async (req, res) => {
       }
 
       device = deviceResult.rows[0];
+    }
+
+    if (device.is_active === false) {
+      await client.query('ROLLBACK');
+      return res.status(403).json({
+        error: 'Thiết bị này đã bị khóa',
+        imei: trimmedImei,
+      });
     }
 
     // Check if device is registered in the selected warehouse OR has access to all warehouses

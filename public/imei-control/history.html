@@ -45,6 +45,12 @@
         </a>
       </li>
       <li class="sidebar-menu-item supervisor-only">
+        <a href="/imei-control/check-device" class="sidebar-menu-link">
+          <i class="fa-solid fa-magnifying-glass sidebar-menu-icon"></i>
+          <span class="sidebar-menu-text">Kiểm tra thiết bị</span>
+        </a>
+      </li>
+      <li class="sidebar-menu-item supervisor-only">
         <a href="/imei-control/devices" class="sidebar-menu-link">
           <i class="fa-solid fa-microchip sidebar-menu-icon"></i>
           <span class="sidebar-menu-text">Quản lý thiết bị</span>
@@ -137,7 +143,7 @@
     <!-- Content -->
     <div class="content-wrapper">
       <!-- Stats -->
-      <div class="stats-grid">
+      <div class="stats-grid" id="history-stats">
         <div class="card stat-card stat-blue">
           <div class="stat-icon">
             <i class="fa-solid fa-layer-group"></i>
@@ -176,11 +182,16 @@
         </div>
       </div>
 
+      <div class="tabs">
+        <button id="tab-scan" class="tab-item active" type="button" data-tab="scan">Lịch sử Scan</button>
+        <button id="tab-modify" class="tab-item" type="button" data-tab="modify">Lịch sử chỉnh sửa</button>
+      </div>
+
       <!-- Header -->
       <div class="flex items-center justify-between mb-4">
         <div class="page-header">
-          <h1 class="page-title">Lịch sử scan</h1>
-          <p class="page-subtitle">Tra cứu toàn bộ lượt scan vào/ra kho</p>
+          <h1 id="history-page-title" class="page-title">Lịch sử scan</h1>
+          <p id="history-page-subtitle" class="page-subtitle">Tra cứu toàn bộ lượt scan vào/ra kho</p>
         </div>
         <button id="export-btn" class="btn btn-secondary">
           <i class="fa-solid fa-file-export"></i>
@@ -217,6 +228,10 @@
           <i class="fa-solid fa-filter"></i>
           Lọc
         </button>
+        <button id="clear-filters-btn" class="btn btn-secondary" type="button">
+          <i class="fa-solid fa-filter-circle-xmark"></i>
+          Clear Filter
+        </button>
       </div>
 
       <!-- Table -->
@@ -224,7 +239,7 @@
         <div class="table-container">
           <table class="data-table">
             <thead>
-              <tr>
+              <tr id="history-table-head">
                 <th>IMEI</th>
                 <th>Họ tên</th>
                 <th>Kho</th>
@@ -240,7 +255,7 @@
           <div class="empty-icon">
             <i class="fa-regular fa-clock"></i>
           </div>
-          <p class="empty-title">Chưa có lịch sử scan nào</p>
+          <p id="no-history-title" class="empty-title">Chưa có lịch sử scan nào</p>
         </div>
         <div id="pagination"></div>
       </div>

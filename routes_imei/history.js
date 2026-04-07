@@ -2,6 +2,28 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../database/db');
 
+function toInt(value, fallback) {
+  const parsed = parseInt(value, 10);
+  return Number.isInteger(parsed) ? parsed : fallback;
+}
+
+async function resolveWarehouseNameById(warehouseId) {
+  if (!warehouseId || warehouseId === 'all') {
+    return null;
+  }
+
+  const result = await pool.query(
+    'SELECT name FROM imei_warehouses WHERE id = $1 LIMIT 1',
+    [toInt(warehouseId, 0)]
+  );
+
+  return result.rows[0]?.name || null;
+}
+
+function escapeCsvValue(value) {
+  return String(value ?? '').replace(/"/g, '""');
+}
+
 // GET /api/history
 router.get('/', async (req, res) => {
   try {
@@ -56,6 +78,68 @@ router.get('/', async (req, res) => {
     `;
     const result = await pool.query(dataQuery, params);
     res.json({ data: result.rows, total, limit: parseInt(limit), offset: parseInt(offset) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/history/modify
+router.get('/modify', async (req, res) => {
+  try {
+    const { imei, action, from, to, warehouse_id, limit = 100, offset = 0 } = req.query;
+    const conditions = [];
+    const params = [];
+
+    if (imei) {
+      params.push(`%${imei}%`);
+      conditions.push(`(
+        ml.imei ILIKE $${params.length}
+        OR ml.email ILIKE $${params.length}
+        OR COALESCE(ml.field_name, '') ILIKE $${params.length}
+        OR COALESCE(ml.old_value, '') ILIKE $${params.length}
+        OR COALESCE(ml.new_value, '') ILIKE $${params.length}
+      )`);
+    }
+    if (action && ['Sửa', 'Xóa', 'Active', 'Deactive'].includes(action)) {
+      params.push(action);
+      conditions.push(`ml.action = $${params.length}`);
+    }
+    if (from) {
+      params.push(from);
+      conditions.push(`ml.created_at >= $${params.length}`);
+    }
+    if (to) {
+      params.push(to);
+      conditions.push(`ml.created_at <= $${params.length}::date + INTERVAL '1 day'`);
+    }
+    if (warehouse_id && warehouse_id !== 'all') {
+      const warehouseName = await resolveWarehouseNameById(warehouse_id);
+      if (warehouseName) {
+        params.push(`%${warehouseName}%`);
+        conditions.push(`COALESCE(ml.warehouse_name, '') ILIKE $${params.length}`);
+      }
+    }
+
+    const where = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
+
+    const countResult = await pool.query(
+      `SELECT COUNT(*) as total FROM imei_modify_log ml ${where}`,
+      params
+    );
+    const total = parseInt(countResult.rows[0].total, 10);
+
+    const dataParams = [...params, toInt(limit, 100), toInt(offset, 0)];
+    const result = await pool.query(
+      `SELECT ml.*
+       FROM imei_modify_log ml
+       ${where}
+       ORDER BY ml.created_at DESC, ml.id DESC
+       LIMIT $${dataParams.length - 1}
+       OFFSET $${dataParams.length}`,
+      dataParams
+    );
+
+    res.json({ data: result.rows, total, limit: toInt(limit, 100), offset: toInt(offset, 0) });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -156,11 +240,70 @@ router.get('/export', async (req, res) => {
 
     const header = 'IMEI,Loai thiet bi,Ma NV,Ho ten,Email,Kho,Hanh dong,Nguoi scan,Thoi gian\n';
     const rows = result.rows.map(r =>
-      `"${r.imei}","${r.device_type || ''}","${r.employee_code || ''}","${r.full_name || ''}","${r.email || ''}","${r.warehouse_name || ''}","${r.action}","${r.scanned_by}","${r.scanned_at}"`
+      `"${escapeCsvValue(r.imei)}","${escapeCsvValue(r.device_type)}","${escapeCsvValue(r.employee_code)}","${escapeCsvValue(r.full_name)}","${escapeCsvValue(r.email)}","${escapeCsvValue(r.warehouse_name)}","${escapeCsvValue(r.action)}","${escapeCsvValue(r.scanned_by)}","${escapeCsvValue(r.scanned_at)}"`
     ).join('\n');
 
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename=scan_history.csv');
+    res.send('\uFEFF' + header + rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/history/modify/export
+router.get('/modify/export', async (req, res) => {
+  try {
+    const { imei, action, from, to, warehouse_id } = req.query;
+    const conditions = [];
+    const params = [];
+
+    if (imei) {
+      params.push(`%${imei}%`);
+      conditions.push(`(
+        ml.imei ILIKE $${params.length}
+        OR ml.email ILIKE $${params.length}
+        OR COALESCE(ml.field_name, '') ILIKE $${params.length}
+        OR COALESCE(ml.old_value, '') ILIKE $${params.length}
+        OR COALESCE(ml.new_value, '') ILIKE $${params.length}
+      )`);
+    }
+    if (action && ['Sửa', 'Xóa', 'Active', 'Deactive'].includes(action)) {
+      params.push(action);
+      conditions.push(`ml.action = $${params.length}`);
+    }
+    if (from) {
+      params.push(from);
+      conditions.push(`ml.created_at >= $${params.length}`);
+    }
+    if (to) {
+      params.push(to);
+      conditions.push(`ml.created_at <= $${params.length}::date + INTERVAL '1 day'`);
+    }
+    if (warehouse_id && warehouse_id !== 'all') {
+      const warehouseName = await resolveWarehouseNameById(warehouse_id);
+      if (warehouseName) {
+        params.push(`%${warehouseName}%`);
+        conditions.push(`COALESCE(ml.warehouse_name, '') ILIKE $${params.length}`);
+      }
+    }
+
+    const where = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
+    const result = await pool.query(
+      `SELECT ml.*
+       FROM imei_modify_log ml
+       ${where}
+       ORDER BY ml.created_at DESC, ml.id DESC`,
+      params
+    );
+
+    const header = 'IMEI,Email,Kho,Hanh dong,Truong,Cu,Moi,Thoi gian\n';
+    const rows = result.rows.map((row) =>
+      `"${escapeCsvValue(row.imei)}","${escapeCsvValue(row.email)}","${escapeCsvValue(row.warehouse_name)}","${escapeCsvValue(row.action)}","${escapeCsvValue(row.field_name)}","${escapeCsvValue(row.old_value)}","${escapeCsvValue(row.new_value)}","${escapeCsvValue(row.created_at)}"`
+    ).join('\n');
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename=modify_history.csv');
     res.send('\uFEFF' + header + rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
