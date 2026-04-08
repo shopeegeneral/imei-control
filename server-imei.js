@@ -100,6 +100,47 @@ app.get('/imei-control/users',          requireRole('admin', 'security'), (req, 
 app.get('/imei-control/scan-blacklist', requireRole('admin', 'user'),     (req, res) => res.sendFile(path.join(__dirname, 'public', 'imei-control', 'scan-blacklist.html')));
 app.get('/imei-control/blacklist',      requireAdmin,                     (req, res) => res.sendFile(path.join(__dirname, 'public', 'imei-control', 'blacklist.html')));
 
+app.get('/api/wave-by-hub', async (req, res, next) => {
+  try {
+    const query = `
+      select whs_id, hub_code, flow_type, order_structure_list, is_active, sort_order, updated_at
+      from wave_by_hub
+      where is_active = true
+      order by flow_type, whs_id, sort_order, hub_code
+    `;
+
+    const result = await pool.query(query);
+    const rows = result.rows;
+
+    const config = rows.reduce((acc, row) => {
+      const flowType = row.flow_type;
+      const whsId = row.whs_id;
+
+      if (!acc[flowType]) {
+        acc[flowType] = {};
+      }
+
+      if (!acc[flowType][whsId]) {
+        acc[flowType][whsId] = [];
+      }
+
+      acc[flowType][whsId].push({
+        hub_code: row.hub_code,
+        order_structure_list: row.order_structure_list
+      });
+      return acc;
+    }, {});
+
+    return res.json({
+      oblm: config.oblm || {},
+      sdd: config.sdd || {},
+      rows
+    });
+  } catch (err) {
+    return next(err);
+  }
+});
+
 syncExpiredDevices(pool).catch((err) => {
   console.error('Initial active expiry sync error:', err.message);
 });
