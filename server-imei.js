@@ -100,6 +100,11 @@ app.get('/imei-control/users',          requireRole('admin', 'security'), (req, 
 app.get('/imei-control/scan-blacklist', requireRole('admin', 'user'),     (req, res) => res.sendFile(path.join(__dirname, 'public', 'imei-control', 'scan-blacklist.html')));
 app.get('/imei-control/blacklist',      requireAdmin,                     (req, res) => res.sendFile(path.join(__dirname, 'public', 'imei-control', 'blacklist.html')));
 
+app.get('/wave_by_hub.py', (req, res) => {
+  res.type('text/plain; charset=utf-8');
+  res.sendFile(path.join(__dirname, 'wave_by_hub.py'));
+});
+
 app.get('/api/wave-by-hub', async (req, res, next) => {
   try {
     const query = `
